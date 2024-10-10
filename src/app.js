@@ -1,9 +1,19 @@
 import express from "express";
+import conectaNaDataBase from "./config/dbConnect.js";
+
+const conexao = await conectaNaDataBase();
+
+conexao.on("error", (erro) => {
+    console.error("erro de conexão", erro);
+});
+
+conexao.once("open", () => {
+    console.log("Conexão com o MongoDB realizada com sucesso!");
+});
 
 const app = express();
-app.unsubscribe(express.json());
+app.use(express.json());
 
-// Mini banco de dados para estudo
 const livros = [
     {
         id: 1,
@@ -40,9 +50,16 @@ app.post("/livros", (req, res) => {
 });
 
 app.put("/livros", (req, res) => {
-    livros.push(req.body);
+    const index = buscaLivro(req.params.id);
     livros[index].titulo = req.body.titulo;
     res.status(200).json(livros);
 });
 
+app.delete("/livros/:id", (req, res) => {
+    const index = buscaLivro(req.params.id);
+    livros.splice(index, 1);
+    res.status(200).send("Livro removido com sucesso");
+});
+
 export default app;
+
